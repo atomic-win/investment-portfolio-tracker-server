@@ -228,13 +228,13 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		return new XirrInput
 		{
 			YearDiff = (valuationDate.DayNumber - transaction.Date.DayNumber) / 365.25,
-			TransactionAmount = (double)await this.CalculateXIRRTransactionAmountAsync(
+			TransactionAmount = await this.CalculateXIRRTransactionAmountAsync(
 				userId,
 				transaction,
 				valuationDate,
 				currency,
 				ct),
-			BalanceAmount = (double)await this.CalculateXIRRBalanceAmountAsync(
+			BalanceAmount = await this.CalculateXIRRBalanceAmountAsync(
 				userId,
 				transaction,
 				valuationDate,
@@ -438,7 +438,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			})
 			.ToImmutableArray();
 
-		double balanceAmount = xirrInputs.Sum(i => i.BalanceAmount);
+		decimal balanceAmount = xirrInputs.Sum(i => i.BalanceAmount);
 
 		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
 
@@ -457,8 +457,8 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		while (xirrUpperBound - xirrLowerBound > 0.0001)
 		{
 			double xirr = (xirrLowerBound + xirrUpperBound) / 2;
-			double npv = inValues
-				.Sum(i => i.Value * Math.Pow(1 + xirr, i.YearDiff));
+			decimal npv = inValues
+				.Sum(i => i.Value * (decimal)Math.Pow(1 + xirr, i.YearDiff));
 
 			if (npv > balanceAmount)
 			{
@@ -498,8 +498,8 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 	{
 		public required double YearDiff { get; init; }
 
-		public required double TransactionAmount { get; init; }
+		public required decimal TransactionAmount { get; init; }
 
-		public required double BalanceAmount { get; init; }
+		public required decimal BalanceAmount { get; init; }
 	}
 }
